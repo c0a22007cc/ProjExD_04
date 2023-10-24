@@ -71,6 +71,8 @@ class Bird(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = xy
         self.speed = 10
+        
+
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -141,11 +143,11 @@ class Bomb(pg.sprite.Sprite):
             self.kill()
 
 
-class Beam(pg.sprite.Sprite):
+class Beam(pg.sprite.Sprite ):
     """
     ビームに関するクラス
     """
-    def __init__(self, bird: Bird):
+    def __init__(self, bird: Bird, angle=0):
         """
         ビーム画像Surfaceを生成する
         引数 bird：ビームを放つこうかとん
@@ -153,7 +155,9 @@ class Beam(pg.sprite.Sprite):
         super().__init__()
         self.vx, self.vy = bird.get_direction()
         angle = math.degrees(math.atan2(-self.vy, self.vx))
+
         self.image = pg.transform.rotozoom(pg.image.load(f"ex04/fig/beam.png"), angle, 2.0)
+
         self.vx = math.cos(math.radians(angle))
         self.vy = -math.sin(math.radians(angle))
         self.rect = self.image.get_rect()
@@ -161,6 +165,48 @@ class Beam(pg.sprite.Sprite):
         self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
         self.speed = 10
 
+    def update(self):
+        """
+        ビームを速度ベクトルself.vx, self.vyに基づき移動させる
+        引数 screen：画面Surface
+        """
+        self.rect.move_ip(+self.speed*self.vx, +self.speed*self.vy)
+        if check_bound(self.rect) != (True, True):
+            self.kill()
+
+
+class NeoBeam(pg.sprite.Sprite ):
+    """
+    ビームに関するクラス
+    """
+    def __init__(self, bird: Bird, angle=0):
+        """
+        ビーム画像Surfaceを生成する
+        引数 bird：ビームを放つこうかとん
+        """
+        super().__init__()
+        self.vx, self.vy = bird.get_direction()
+        random_angle = random.uniform(-50, 50)
+        angle = math.degrees(math.atan2(-self.vy, self.vx)) + random_angle
+
+        self.image = pg.transform.rotozoom(pg.image.load(f"ex04/fig/beam.png"), angle, 5.0)
+
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+        self.rect = self.image.get_rect()
+        self.rect.centery = bird.rect.centery + bird.rect.height * self.vy
+        self.rect.centerx = bird.rect.centerx + bird.rect.width * self.vx
+        self.speed = 10
+
+    def gen_beams(self, num, beams):
+        for _ in range(num):
+            angle = self.calculate_shooting_angle()  # 鳥の向きに合わせたビームの発射角度を計算
+            beams.add(Beam(self, angle))  # ビームを Beam グループに追加
+
+    def calculate_shooting_angle(self):
+    
+        x, y = self.get_direction()
+        return math.degrees(math.atan2(-y, x))
     def update(self):
         """
         ビームを速度ベクトルself.vx, self.vyに基づき移動させる
@@ -270,6 +316,9 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
+                #if event.type == pg.KEYDOWN and event.key == pg.K_1:
+                    beams.add(NeoBeam(bird))
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
