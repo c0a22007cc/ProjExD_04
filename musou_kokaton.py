@@ -261,6 +261,29 @@ class Enemy(pg.sprite.Sprite):
         self.rect.centery += self.vy
 
 
+class Gravity(pg.sprite.Sprite):
+    def __init__(self, bird: Bird, size: int, life: int):
+        super().__init__()
+        """
+        こうかとんを中心に重力球を発生させる処理を行うクラス
+        """    
+        self.vx, self.vy = bird.get_direction()#こうかとんの位置
+        self.life = life
+        rad = size  # 円の半径：size
+        self.image = pg.Surface((2*rad, 2*rad))
+        pg.draw.circle(self.image, (10, 10, 10), (rad, rad), rad)
+        self.image.set_colorkey((0, 0, 0))
+        self.image.set_alpha(200)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = bird.rect.centerx
+        self.rect.centery = bird.rect.centery
+    
+    def update(self):
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
+
+
 class Score:
     """
     打ち落とした爆弾，敵機の数をスコアとして表示するクラス
@@ -312,6 +335,7 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    gravity = pg.sprite.Group()
     shields = pg.sprite.Group()
     neos = pg.sprite.Group()
 
@@ -324,6 +348,11 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+
+            if event.type == pg.KEYDOWN and event.key == pg.K_TAB:
+                if score.score >= 50:
+                    gravity.add(Gravity(bird, 200, 500))
+                    score.score -= 50
 
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
                 bird.speed = 20
@@ -364,6 +393,10 @@ def main():
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
+        
+        for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
+            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            score.score_up(1)  # 1点アップ
 
         for bomb in pg.sprite.groupcollide(bombs, shields, True, False).keys():
 
@@ -388,6 +421,8 @@ def main():
         emys.draw(screen)
         bombs.update()
         bombs.draw(screen)
+        gravity.update()
+        gravity.draw(screen)
         neos.update()
         neos.draw(screen)
         exps.update()
