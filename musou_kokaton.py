@@ -417,7 +417,9 @@ def main():
             score.score_up(1)  # 1点アップ
 
         for bomb in pg.sprite.groupcollide(bombs, shields, True, False).keys():
-
+            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            score.score_up(1)  # 1点アップ
+            
         for bomb in pg.sprite.groupcollide(bombs, neos, True, False).keys():
 
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
