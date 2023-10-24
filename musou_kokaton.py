@@ -325,6 +325,11 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
 
+            if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
+                bird.speed = 20
+            else:
+                bird.speed = 10
+                
             if score.score >= 50 and shields is not None:
                 if len(shields) < 1:  
                     if event.type == pg.KEYDOWN and event.key == pg.K_CAPSLOCK:
@@ -335,6 +340,7 @@ def main():
                 if score.score >= 200:
                     neos.add(NeoGravity(400))
                     score.score_up(-200)
+
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
