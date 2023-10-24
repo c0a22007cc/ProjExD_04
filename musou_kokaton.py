@@ -249,6 +249,25 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class NeoGravity(pg.sprite.Sprite):
+    """
+    重力に関するクラス
+    """
+    def __init__(self, life: int):
+        super().__init__()
+        self.life = life
+        self.image = pg.Surface((WIDTH, HEIGHT))
+        self.image.set_alpha(150)
+        self.rect = self.image.get_rect()
+        pg.draw.rect(self.image, (0, 0, 0), pg.Rect(0, 0, WIDTH, HEIGHT))
+
+    def update(self):
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
+        
+
+
 def main():
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -260,6 +279,7 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    neos = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
@@ -270,6 +290,10 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_RETURN: #重力場生成
+                if score.score >= 200:
+                    neos.add(NeoGravity(400))
+                    score.score_up(-200)
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
@@ -285,7 +309,16 @@ def main():
             score.score_up(10)  # 10点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
+        for emy in pg.sprite.groupcollide(emys, neos, True, False).keys():
+            exps.add(Explosion(emy, 100))  # 爆発エフェクト
+            score.score_up(10)  # 10点アップ
+            bird.change_img(6, screen)  # こうかとん喜びエフェクト
+
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
+            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            score.score_up(1)  # 1点アップ
+
+        for bomb in pg.sprite.groupcollide(bombs, neos, True, False).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
 
@@ -303,6 +336,8 @@ def main():
         emys.draw(screen)
         bombs.update()
         bombs.draw(screen)
+        neos.update()
+        neos.draw(screen)
         exps.update()
         exps.draw(screen)
         score.update(screen)
